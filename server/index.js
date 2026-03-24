@@ -10,10 +10,11 @@ const PORT = process.env.PORT || 4000;
 const SECRET = process.env.JWT_SECRET || 'motivus_secret_2026';
 
 app.use(cors());
+app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date() }));
+
 app.use(express.json());
 
-// Health check
-app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date() }));
+
 
 // Auth middleware
 function requireAdmin(req, res, next) {

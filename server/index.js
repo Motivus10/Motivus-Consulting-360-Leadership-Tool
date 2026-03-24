@@ -222,4 +222,4 @@ app.post('/api/nominations/:project_id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.listen(PORT, () => console.log(`✓ Motivus 360 server running on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`✓ Motivus 360 server running on port ${PORT}`));

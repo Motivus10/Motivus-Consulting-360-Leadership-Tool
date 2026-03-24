@@ -6,6 +6,7 @@ const bcrypt     = require('bcryptjs');
 const db         = require('./db');
 
 const app  = express();
+console.log("DB URL starts with:", (process.env.DATABASE_URL||"").substring(0,30));
 const PORT = process.env.PORT || 4000;
 const SECRET = process.env.JWT_SECRET || 'motivus_secret_2026';
 

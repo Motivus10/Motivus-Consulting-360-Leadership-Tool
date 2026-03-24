@@ -8,4 +8,4 @@ const pool = new Pool({
 module.exports = {
   query: (text, params) => pool.query(text, params),
   getClient: () => pool.connect()
-};
+};// deployed Tue 24 Mar 2026 14:33:55 GMT

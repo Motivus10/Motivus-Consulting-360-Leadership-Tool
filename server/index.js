@@ -265,3 +265,16 @@ app.patch('/api/admin/raters/:id/reset', requireAdmin, async (req, res) => {
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
+
+// Network test
+app.get('/api/test-network', async (req, res) => {
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'onboarding@resend.dev', to: 'dan@motivusconsulting.co.uk', subject: 'Test', html: '<p>Test</p>' })
+    });
+    const data = await r.json();
+    res.json({ status: r.status, data });
+  } catch(e) { res.json({ error: e.message }); }
+});

@@ -257,3 +257,11 @@ app.post('/api/nominations/:project_id', async (req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => console.log(`✓ Motivus 360 server running on port ${PORT}`));
+
+// Reset rater status (for testing)
+app.patch('/api/admin/raters/:id/reset', requireAdmin, async (req, res) => {
+  try {
+    await db.query("UPDATE raters SET status='pending', invited_at=NULL WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});

@@ -46,7 +46,7 @@ export default function AdminProject() {
 
   const deleteRater = async (rid) => {
     if (!window.confirm('Remove this rater?')) return;
-    try { await api.deleteRater(id, rid); notify('Removed'); load(); }
+    try { await api.deleteRater(rid); notify('Removed'); load(); }
     catch(e) { notify(e.message, 'error'); }
   };
 

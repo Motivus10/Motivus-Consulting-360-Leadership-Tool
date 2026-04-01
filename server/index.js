@@ -3,6 +3,24 @@ const express    = require('express');
 const cors       = require('cors');
 const jwt        = require('jsonwebtoken');
 const bcrypt     = require('bcryptjs');
+const nodemailer  = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
+const sendEmail = async (to, subject, html) => {
+  await transporter.sendMail({
+    from: process.env.FROM_EMAIL,
+    to, subject, html
+  });
+};
 const db         = require('./db');
 
 const app  = express();
@@ -98,12 +116,26 @@ app.post('/api/admin/projects/:id/raters', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/projects/:id/send-invites', requireAdmin, async (req, res) => {
   try {
-    await db.query(
-      "UPDATE raters SET invited_at = CURRENT_TIMESTAMP WHERE project_id = $1 AND status = 'pending'",
-      [req.params.id]
-    );
+    const { rows: proj } = await db.query('SELECT * FROM projects WHERE id = $1', [req.params.id]);
+    const project = proj[0];
+    const { rows: raters } = await db.query("SELECT * FROM raters WHERE project_id = $1 AND status = 'pending'", [req.params.id]);
+    let sent = 0;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://motivus360.netlify.app';
+    for (const rater of raters) {
+      const surveyUrl = frontendUrl + '/survey/' + rater.access_code;
+      const deadline = new Date(project.deadline).toLocaleDateString('en-GB');
+      const html = '<p>Dear ' + rater.name + ',</p>' +
+        '<p>You have been asked to provide 360 feedback for <strong>' + project.subject_name + '</strong>.</p>' +
+        '<p>Please click the link below to complete your feedback by ' + deadline + ':</p>' +
+        '<p><a href="' + surveyUrl + '" style="background:#1a3a6b;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block">Complete Feedback</a></p>' +
+        '<p>If the button does not work, copy this link: ' + surveyUrl + '</p>' +
+        '<p>Thank you,<br>Motivus Consulting</p>';
+      await sendEmail(rater.email, '360 Feedback Request for ' + project.subject_name, html);
+      await db.query("UPDATE raters SET invited_at = CURRENT_TIMESTAMP, status = 'invited' WHERE id = $1", [rater.id]);
+      sent++;
+    }
     await db.query("UPDATE projects SET status = 'in_progress' WHERE id = $1", [req.params.id]);
-    res.json({ ok: true });
+    res.json({ ok: true, sent });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
